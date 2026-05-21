@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "author": "PetSense - CLYVO VET FIAP 2026",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-v1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": -80,
+      "left": 220,
+      "attrs": { "temperature": "38.5", "humidity": "60" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": 100,
+      "left": 260,
+      "attrs": { "value": "0.5" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_green",
+      "top": -60,
+      "left": 130,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_red",
+      "top": -60,
+      "left": 160,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -40,
+      "left": 130,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": -40,
+      "left": 160,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": 160,
+      "left": -100,
+      "attrs": { "pins": "i2c", "address": "0x27" }
+    }
+  ],
+  "connections": [
+    ["esp:D4", "dht1:SDA", "green", []],
+    ["esp:GND.1", "dht1:GND", "black", []],
+    ["esp:3V3", "dht1:VCC", "red", []],
+
+    ["esp:D34", "pot1:SIG", "orange", []],
+    ["esp:GND.1", "pot1:GND", "black", []],
+    ["esp:3V3", "pot1:VCC", "red", []],
+
+    ["esp:D2", "r1:1", "green", []],
+    ["r1:2", "led_green:A", "green", []],
+    ["led_green:K", "esp:GND.1", "black", []],
+
+    ["esp:D15", "r2:1", "red", []],
+    ["r2:2", "led_red:A", "red", []],
+    ["led_red:K", "esp:GND.1", "black", []],
+
+    ["esp:D21", "lcd1:SDA", "blue", []],
+    ["esp:D22", "lcd1:SCL", "yellow", []],
+    ["esp:GND.1", "lcd1:GND", "black", []],
+    ["esp:3V3", "lcd1:VCC", "red", []]
+  ],
+  "serialMonitor": {
+    "display": "auto"
+  }
+}

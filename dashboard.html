@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSense Dashboard — CLYVO VET</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050c1a;
+    --bg2: #0a1628;
+    --card: #0d1f38;
+    --border: #1a3354;
+    --accent: #00c8ff;
+    --accent2: #00ffc8;
+    --warn: #ff6b35;
+    --danger: #ff2d55;
+    --ok: #00e676;
+    --text: #e8f4f8;
+    --muted: #5a7a99;
+    --font-mono: 'Space Mono', monospace;
+    --font-sans: 'Sora', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid de fundo animado */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .logo-text h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo-text span {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Pet selector */
+  .pet-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .pet-card {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 140px;
+  }
+
+  .pet-card.active {
+    border-color: var(--accent);
+    background: rgba(0,200,255,0.08);
+  }
+
+  .pet-avatar {
+    font-size: 28px;
+  }
+
+  .pet-info .name {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .pet-info .breed {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* Métricas principais */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .metric-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.3s;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .metric-card.alert {
+    border-color: var(--danger);
+    animation: alertGlow 2s infinite;
+  }
+
+  @keyframes alertGlow {
+    0%, 100% { box-shadow: 0 0 0 rgba(255,45,85,0); }
+    50% { box-shadow: 0 0 20px rgba(255,45,85,0.3); }
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    border-radius: 0 20px 0 80px;
+    opacity: 0.08;
+  }
+
+  .metric-card.temp::before { background: var(--warn); }
+  .metric-card.bpm::before { background: var(--danger); }
+  .metric-card.status::before { background: var(--ok); }
+  .metric-card.alerts::before { background: var(--accent); }
+
+  .metric-label {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .metric-value {
+    font-size: 2.6rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .metric-unit {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .metric-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .metric-sub.ok { color: var(--ok); }
+  .metric-sub.warn { color: var(--warn); }
+  .metric-sub.danger { color: var(--danger); }
+
+  /* Barra de range */
+  .range-bar {
+    margin-top: 12px;
+    height: 4px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .range-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Gráfico de histórico */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .icon { font-size: 1rem; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* Canvas do gráfico */
+  #chartCanvas {
+    width: 100%;
+    height: 160px;
+  }
+
+  /* Log de alertas */
+  .log-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .log-list::-webkit-scrollbar { width: 4px; }
+  .log-list::-webkit-scrollbar-track { background: var(--bg); }
+  .log-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .log-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px;
+    background: var(--bg2);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    border-left: 3px solid transparent;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .log-item.ok { border-left-color: var(--ok); }
+  .log-item.warn { border-left-color: var(--warn); }
+  .log-item.danger { border-left-color: var(--danger); }
+
+  .log-icon { font-size: 1rem; flex-shrink: 0; }
+
+  .log-text .time {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  /* Footer */
+  .footer-bar {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  .footer-bar span { color: var(--accent); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .bottom-grid { grid-template-columns: 1fr; }
+    header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .metric-value { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">🐾</div>
+      <div class="logo-text">
+        <h1>PetSense Dashboard</h1>
+        <span>CLYVO VET · IoT Monitor</span>
+      </div>
+    </div>
+    <div class="status-pill">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusLabel">DISPOSITIVO CONECTADO</span>
+    </div>
+  </header>
+
+  <!-- Pet Selector -->
+  <div class="pet-bar">
+    <div class="pet-card active" onclick="selectPet(this, 'Thor')">
+      <div class="pet-avatar">🐕</div>
+      <div class="pet-info">
+        <div class="name">Thor</div>
+        <div class="breed">Golden · 3 anos</div>
+      </div>
+    </div>
+    <div class="pet-card" onclick="selectPet(this, 'Luna')">
+      <div class="pet-avatar">🐈</div>
+      <div class="pet-info">
+        <div class="name">Luna</div>
+        <div class="breed">Persa · 2 anos</div>
+      </div>
+    </div>
+    <div class="pet-card" onclick="selectPet(this, 'Rex')">
+      <div class="pet-avatar">🐕</div>
+      <div class="pet-info">
+        <div class="name">Rex</div>
+        <div class="breed">Bulldog · 5 anos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas -->
+  <div class="metrics-grid">
+    <div class="metric-card temp" id="cardTemp">
+      <div class="metric-label">🌡️ Temperatura Corporal</div>
+      <div class="metric-value" id="tempVal">--.-<span class="metric-unit"> °C</span></div>
+      <div class="metric-sub" id="tempSub">Aguardando leitura...</div>
+      <div class="range-bar">
+        <div class="range-fill" id="tempBar" style="width:0%; background: var(--warn);"></div>
+      </div>
+    </div>
+
+    <div class="metric-card bpm" id="cardBpm">
+      <div class="metric-label">❤️ Frequência Cardíaca</div>
+      <div class="metric-value" id="bpmVal">---<span class="metric-unit"> bpm</span></div>
+      <div class="metric-sub" id="bpmSub">Aguardando leitura...</div>
+      <div class="range-bar">
+        <div class="range-fill" id="bpmBar" style="width:0%; background: var(--danger);"></div>
+      </div>
+    </div>
+
+    <div class="metric-card status" id="cardStatus">
+      <div class="metric-label">✅ Status Geral</div>
+      <div class="metric-value" id="statusVal" style="font-size:1.4rem; margin-top:8px;">Normal</div>
+      <div class="metric-sub ok" id="statusSub">Todos os sinais dentro do esperado</div>
+    </div>
+
+    <div class="metric-card alerts">
+      <div class="metric-label">⚠️ Alertas (24h)</div>
+      <div class="metric-value" id="alertCount">0<span class="metric-unit"> eventos</span></div>
+      <div class="metric-sub" id="lastAlert">Nenhum alerta recente</div>
+    </div>
+  </div>
+
+  <!-- Gráfico + Log -->
+  <div class="bottom-grid">
+    <div class="chart-card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">📈</span> Histórico em Tempo Real</div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div> Temp</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> BPM</div>
+        </div>
+      </div>
+      <canvas id="chartCanvas"></canvas>
+    </div>
+
+    <div class="log-card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">📋</span> Log de Eventos</div>
+      </div>
+      <div class="log-list" id="logList">
+        <div class="log-item ok">
+          <span class="log-icon">✅</span>
+          <div class="log-text">
+            <div class="time">Sistema iniciado</div>
+            <div>PetSense monitorando Thor</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-bar">
+    <span>FIAP 2026 · Challenge CLYVO VET</span>
+    <span id="updateTime">Última atualização: --:--:--</span>
+  </div>
+
+</div>
+
+<script>
+// ===================== DADOS E SIMULAÇÃO =====================
+const TEMP_MIN = 37.5, TEMP_MAX = 39.5;
+const BPM_MIN = 60, BPM_MAX = 140;
+
+let alertCount = 0;
+let currentPet = 'Thor';
+const history = { temp: [], bpm: [], labels: [] };
+const MAX_POINTS = 20;
+
+// Simula leituras do ESP32 (substitua por fetch() real quando tiver servidor)
+function simularLeitura() {
+  // Temperatura realista de cachorro: 37.5–39.5°C
+  // Às vezes gera valores fora do range para testar alertas
+  const anomaly = Math.random() < 0.15; // 15% de chance de anomalia
+  const temp = anomaly
+    ? +(39.5 + Math.random() * 1.5).toFixed(1)
+    : +(37.5 + Math.random() * 2).toFixed(1);
+
+  const bpm = anomaly
+    ? Math.floor(140 + Math.random() * 30)
+    : Math.floor(70 + Math.random() * 60);
+
+  return { temperatura: temp, bpm, alerta: anomaly };
+}
+
+// Atualiza UI com novos dados
+function atualizarDashboard(data) {
+  const { temperatura, bpm, alerta } = data;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('pt-BR');
+
+  // Temperatura
+  document.getElementById('tempVal').innerHTML =
+    `${temperatura.toFixed(1)}<span class="metric-unit"> °C</span>`;
+  const tempPct = Math.min(100, Math.max(0, ((temperatura - 36) / (41 - 36)) * 100));
+  document.getElementById('tempBar').style.width = tempPct + '%';
+  const tempOk = temperatura >= TEMP_MIN && temperatura <= TEMP_MAX;
+  document.getElementById('tempSub').textContent =
+    tempOk ? `✓ Normal (${TEMP_MIN}–${TEMP_MAX}°C)` : `⚠ Fora do normal! (${TEMP_MIN}–${TEMP_MAX}°C)`;
+  document.getElementById('tempSub').className = 'metric-sub ' + (tempOk ? 'ok' : 'danger');
+  document.getElementById('cardTemp').classList.toggle('alert', !tempOk);
+
+  // BPM
+  document.getElementById('bpmVal').innerHTML =
+    `${bpm}<span class="metric-unit"> bpm</span>`;
+  const bpmPct = Math.min(100, Math.max(0, ((bpm - 40) / (180 - 40)) * 100));
+  document.getElementById('bpmBar').style.width = bpmPct + '%';
+  const bpmOk = bpm >= BPM_MIN && bpm <= BPM_MAX;
+  document.getElementById('bpmSub').textContent =
+    bpmOk ? `✓ Normal (${BPM_MIN}–${BPM_MAX} bpm)` : `⚠ Fora do normal!`;
+  document.getElementById('bpmSub').className = 'metric-sub ' + (bpmOk ? 'ok' : 'danger');
+  document.getElementById('cardBpm').classList.toggle('alert', !bpmOk);
+
+  // Status geral
+  const statusEl = document.getElementById('statusVal');
+  const statusSub = document.getElementById('statusSub');
+  if (alerta) {
+    statusEl.textContent = '⚠ ALERTA';
+    statusEl.style.color = 'var(--danger)';
+    statusSub.textContent = 'Verificar sinais do pet imediatamente';
+    statusSub.className = 'metric-sub danger';
+    document.getElementById('statusDot').style.background = 'var(--danger)';
+    document.getElementById('statusDot').style.boxShadow = '0 0 8px var(--danger)';
+  } else {
+    statusEl.textContent = 'Normal';
+    statusEl.style.color = 'var(--ok)';
+    statusSub.textContent = 'Todos os sinais dentro do esperado';
+    statusSub.className = 'metric-sub ok';
+    document.getElementById('statusDot').style.background = 'var(--ok)';
+    document.getElementById('statusDot').style.boxShadow = '0 0 8px var(--ok)';
+  }
+
+  // Contador de alertas
+  if (alerta) {
+    alertCount++;
+    document.getElementById('alertCount').innerHTML =
+      `${alertCount}<span class="metric-unit"> eventos</span>`;
+    document.getElementById('lastAlert').textContent = `Último: ${timeStr}`;
+  }
+
+  // Histórico para o gráfico
+  history.temp.push(temperatura);
+  history.bpm.push(bpm);
+  history.labels.push(timeStr.slice(-5)); // HH:MM
+  if (history.temp.length > MAX_POINTS) {
+    history.temp.shift(); history.bpm.shift(); history.labels.shift();
+  }
+
+  // Adiciona ao log
+  adicionarLog(alerta, temperatura, bpm, timeStr);
+
+  // Atualiza timestamp
+  document.getElementById('updateTime').textContent = `Última atualização: ${timeStr}`;
+
+  // Redesenha gráfico
+  desenharGrafico();
+}
+
+// Log de eventos
+function adicionarLog(alerta, temp, bpm, time) {
+  const list = document.getElementById('logList');
+  const item = document.createElement('div');
+  item.className = `log-item ${alerta ? 'danger' : 'ok'}`;
+  item.innerHTML = `
+    <span class="log-icon">${alerta ? '⚠️' : '✅'}</span>
+    <div class="log-text">
+      <div class="time">${time}</div>
+      <div>${alerta ? 'ALERTA' : 'Normal'} — Temp: ${temp}°C | BPM: ${bpm}</div>
+    </div>
+  `;
+  list.insertBefore(item, list.firstChild);
+  if (list.children.length > 8) list.removeChild(list.lastChild);
+}
+
+// Gráfico simples com Canvas
+function desenharGrafico() {
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  const pad = { top: 10, right: 10, bottom: 30, left: 40 };
+  const iW = W - pad.left - pad.right;
+  const iH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(26,51,84,0.8)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (iH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  }
+
+  if (history.temp.length < 2) return;
+
+  const n = history.temp.length;
+
+  // Temperatura (laranja)
+  const tMin = 36, tMax = 41;
+  ctx.strokeStyle = 'var(--warn)';
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = 'var(--warn)';
+  ctx.beginPath();
+  history.temp.forEach((v, i) => {
+    const x = pad.left + (i / (n - 1)) * iW;
+    const y = pad.top + iH - ((v - tMin) / (tMax - tMin)) * iH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // BPM (vermelho) — normalizado na mesma escala visual
+  const bMin = 40, bMax = 180;
+  ctx.strokeStyle = '#ff2d55';
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = '#ff2d55';
+  ctx.beginPath();
+  history.bpm.forEach((v, i) => {
+    const x = pad.left + (i / (n - 1)) * iW;
+    const y = pad.top + iH - ((v - bMin) / (bMax - bMin)) * iH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Labels do eixo X
+  ctx.fillStyle = 'rgba(90,122,153,0.8)';
+  ctx.font = '10px Space Mono, monospace';
+  ctx.textAlign = 'center';
+  [0, Math.floor(n/2), n-1].forEach(i => {
+    if (history.labels[i]) {
+      const x = pad.left + (i / (n - 1)) * iW;
+      ctx.fillText(history.labels[i], x, H - 4);
+    }
+  });
+}
+
+// Troca de pet
+function selectPet(el, name) {
+  document.querySelectorAll('.pet-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentPet = name;
+  // Limpa histórico ao trocar de pet
+  history.temp = []; history.bpm = []; history.labels = [];
+  alertCount = 0;
+  adicionarLog(false, '--', '--', new Date().toLocaleTimeString('pt-BR'));
+}
+
+// Loop principal: a cada 2s simula nova leitura
+// Em produção, troque simularLeitura() por fetch('/data')
+setInterval(() => {
+  const data = simularLeitura();
+  atualizarDashboard(data);
+}, 2000);
+
+// Primeira leitura imediata
+atualizarDashboard(simularLeitura());
+window.addEventListener('resize', desenharGrafico);
+</script>
+</body>
+</html>
