@@ -29,16 +29,15 @@ O **PetSense** preenche esse gap com monitoramento IoT de sinais vitais.
 
 ## 🔧 Tecnologias Utilizadas
 
-| Componente | Tecnologia |
-|---|---|
-| Microcontrolador | ESP32 (simulado no Wokwi) |
-| Sensor de temperatura | DHT22 |
-| Sensor de frequência cardíaca | Potenciômetro (simulação) |
-| Display | LCD 16x2 I2C |
-| Indicadores | LEDs verde/vermelho |
-| Protocolo de envio | HTTP (POST JSON) |
-| Dashboard | HTML + CSS + JavaScript (Canvas) |
-| Simulação | [Wokwi](https://wokwi.com) |
+| Componente | Tecnologia | Equivalente Real |
+|---|---|---|
+| Microcontrolador | ESP32 (simulado no Wokwi) | ESP32 embutido na roupa |
+| Sensor de temperatura | DHT22 | Sensor infravermelho corporal |
+| Sensor de frequência cardíaca | Potenciômetro (simulação) | Sensor de oximetria (PPG) |
+| Display | LCD 16x2 I2C | App mobile / dashboard web |
+| Indicadores | LEDs verde/vermelho | Notificação push no celular |
+| Protocolo de envio | HTTP (POST JSON) | HTTP/MQTT via WiFi ou BLE |
+| Simulação | Wokwi |
 
 ---
 
