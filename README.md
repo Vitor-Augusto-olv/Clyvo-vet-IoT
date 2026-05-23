@@ -5,9 +5,13 @@
 
 ## 📌 Descrição do Projeto
 
-O **PetSense** é um sistema de monitoramento IoT contínuo da saúde animal, desenvolvido como parte do **Challenge FIAP 2026** em parceria com a **CLYVO VET**.
+O **PetSense** é um sistema de monitoramento IoT contínuo da saúde animal 
+através de uma **roupa inteligente para pets**, desenvolvido como parte do 
+**Challenge FIAP 2026** em parceria com a **CLYVO VET**.
 
-O problema que resolve: tutores de pets só buscam atendimento veterinário em situações de emergência. O PetSense transforma esse modelo **reativo** em um cuidado **preventivo e contínuo**, coletando sinais vitais do animal em tempo real e enviando alertas inteligentes para o responsável e para a clínica parceira.
+A roupa é equipada com sensores embutidos que monitoram sinais vitais do 
+animal em tempo real — temperatura corporal e frequência cardíaca — enviando 
+os dados para o responsável e para a clínica parceira via dashboard web.
 
 ---
 
@@ -112,5 +116,5 @@ ArduinoJson
 ## 📎 Links
 
 - 🎥 Vídeo de demonstração: [YouTube - não listado](#)
-- 🔗 Simulação Wokwi: [Link do projeto](#)
+- 🔗 Simulação Wokwi: [https://wokwi.com/projects/464820469692047361](#)
 - 🏥 Empresa parceira: [CLYVO VET](https://clyvo.com.br)
