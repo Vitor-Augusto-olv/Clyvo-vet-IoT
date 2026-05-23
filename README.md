@@ -114,6 +114,6 @@ ArduinoJson
 
 ## 📎 Links
 
-- 🎥 Vídeo de demonstração: [YouTube - não listado](#)
+- 🎥 Vídeo de demonstração: [https://youtu.be/iaI_jrhwC7g](#)
 - 🔗 Simulação Wokwi: [https://wokwi.com/projects/464820469692047361](#)
 - 🏥 Empresa parceira: [CLYVO VET](https://clyvo.com.br)
