@@ -117,3 +117,8 @@ ArduinoJson
 - 🎥 Vídeo de demonstração: [https://youtu.be/iaI_jrhwC7g](#)
 - 🔗 Simulação Wokwi: [https://wokwi.com/projects/464820469692047361](#)
 - 🏥 Empresa parceira: [CLYVO VET](https://clyvo.com.br)
+
+## Componente de IA (Sprint 3)
+
+Definição do componente de IA conversacional (problema, abordagem, dados e arquitetura) 
+está documentada em [`docs/ia-sprint3.md`](./docs/ia-sprint3.md).
