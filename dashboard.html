@@ -2,712 +2,373 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PetSense Dashboard — CLYVO VET</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PetSense | Clyvo Vet - Monitoramento e IA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root {
-    --bg: #050c1a;
-    --bg2: #0a1628;
-    --card: #0d1f38;
-    --border: #1a3354;
-    --accent: #00c8ff;
-    --accent2: #00ffc8;
-    --warn: #ff6b35;
-    --danger: #ff2d55;
-    --ok: #00e676;
-    --text: #e8f4f8;
-    --muted: #5a7a99;
-    --font-mono: 'Space Mono', monospace;
-    --font-sans: 'Sora', sans-serif;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-sans);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Grid de fundo animado */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px;
-  }
-
-  /* Header */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo-area {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .logo-icon {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-  }
-
-  .logo-text h1 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: var(--text);
-  }
-
-  .logo-text span {
-    font-size: 0.75rem;
-    color: var(--accent);
-    font-family: var(--font-mono);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .status-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 8px 16px;
-    font-size: 0.8rem;
-    font-family: var(--font-mono);
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--ok);
-    box-shadow: 0 0 8px var(--ok);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  /* Pet selector */
-  .pet-bar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 28px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
-
-  .pet-card {
-    flex-shrink: 0;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    min-width: 140px;
-  }
-
-  .pet-card.active {
-    border-color: var(--accent);
-    background: rgba(0,200,255,0.08);
-  }
-
-  .pet-avatar {
-    font-size: 28px;
-  }
-
-  .pet-info .name {
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .pet-info .breed {
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  /* Métricas principais */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .metric-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, border-color 0.3s;
-  }
-
-  .metric-card:hover {
-    transform: translateY(-2px);
-  }
-
-  .metric-card.alert {
-    border-color: var(--danger);
-    animation: alertGlow 2s infinite;
-  }
-
-  @keyframes alertGlow {
-    0%, 100% { box-shadow: 0 0 0 rgba(255,45,85,0); }
-    50% { box-shadow: 0 0 20px rgba(255,45,85,0.3); }
-  }
-
-  .metric-card::before {
-    content: '';
-    position: absolute;
-    top: 0; right: 0;
-    width: 80px; height: 80px;
-    border-radius: 0 20px 0 80px;
-    opacity: 0.08;
-  }
-
-  .metric-card.temp::before { background: var(--warn); }
-  .metric-card.bpm::before { background: var(--danger); }
-  .metric-card.status::before { background: var(--ok); }
-  .metric-card.alerts::before { background: var(--accent); }
-
-  .metric-label {
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .metric-value {
-    font-size: 2.6rem;
-    font-weight: 700;
-    font-family: var(--font-mono);
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .metric-unit {
-    font-size: 1rem;
-    color: var(--muted);
-    font-weight: 400;
-  }
-
-  .metric-sub {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 8px;
-  }
-
-  .metric-sub.ok { color: var(--ok); }
-  .metric-sub.warn { color: var(--warn); }
-  .metric-sub.danger { color: var(--danger); }
-
-  /* Barra de range */
-  .range-bar {
-    margin-top: 12px;
-    height: 4px;
-    background: var(--bg);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .range-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.5s ease;
-  }
-
-  /* Gráfico de histórico */
-  .bottom-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 16px;
-  }
-
-  .chart-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-  }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-
-  .card-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card-title .icon { font-size: 1rem; }
-
-  .legend {
-    display: flex;
-    gap: 16px;
-    font-size: 0.72rem;
-    color: var(--muted);
-    font-family: var(--font-mono);
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  /* Canvas do gráfico */
-  #chartCanvas {
-    width: 100%;
-    height: 160px;
-  }
-
-  /* Log de alertas */
-  .log-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-    overflow: hidden;
-  }
-
-  .log-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  .log-list::-webkit-scrollbar { width: 4px; }
-  .log-list::-webkit-scrollbar-track { background: var(--bg); }
-  .log-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .log-item {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    padding: 10px;
-    background: var(--bg2);
-    border-radius: 10px;
-    font-size: 0.78rem;
-    border-left: 3px solid transparent;
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(10px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .log-item.ok { border-left-color: var(--ok); }
-  .log-item.warn { border-left-color: var(--warn); }
-  .log-item.danger { border-left-color: var(--danger); }
-
-  .log-icon { font-size: 1rem; flex-shrink: 0; }
-
-  .log-text .time {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--muted);
-    margin-bottom: 2px;
-  }
-
-  /* Footer */
-  .footer-bar {
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.72rem;
-    color: var(--muted);
-    font-family: var(--font-mono);
-  }
-
-  .footer-bar span { color: var(--accent); }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .bottom-grid { grid-template-columns: 1fr; }
-    header { flex-direction: column; gap: 12px; align-items: flex-start; }
-    .metric-value { font-size: 2rem; }
-  }
+  :root { --bg:#0a101c; --card:#141d2e; --borda:#26324a; --texto:#f1f5f9; --suave:#9aa8bd;
+          --acento:#e63963; --ok:#22c55e; --aviso:#f59e0b; --urg:#ef4444; --azul:#3b82f6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--texto); }
+  header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 24px;
+           background:#0b1f33; border-bottom:1px solid var(--borda); flex-wrap:wrap; }
+  header h1 { margin:0; font-size:20px; }
+  header small { color:var(--suave); }
+  .barra { display:flex; gap:10px; align-items:center; }
+  select, input, button { font:inherit; }
+  select, input[type=text], input[type=email], input[type=password] {
+    background:var(--bg); color:var(--texto); border:1px solid var(--borda); border-radius:10px; padding:9px 12px; }
+  button { background:var(--acento); color:#fff; border:0; border-radius:10px; padding:9px 16px; cursor:pointer; font-weight:600; }
+  button.sec { background:transparent; border:1px solid var(--borda); color:var(--texto); }
+  button:disabled { opacity:.5; cursor:default; }
+  main { padding:20px 24px; display:grid; grid-template-columns: 1.3fr 1fr; gap:20px; max-width:1300px; margin:0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .card { background:var(--card); border:1px solid var(--borda); border-radius:16px; padding:18px; }
+  .card h2 { margin:0 0 12px; font-size:15px; color:var(--suave); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:20px; }
+  .stat { background:var(--card); border:1px solid var(--borda); border-radius:16px; padding:16px; }
+  .stat .rot { color:var(--suave); font-size:13px; }
+  .stat .val { font-size:30px; font-weight:700; margin-top:4px; }
+  .stat.alerta { border-color:var(--urg); }
+  .stat.alerta .val { color:var(--urg); }
+  .pill { display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .pill.ok { background:rgba(34,197,94,.15); color:var(--ok); }
+  .pill.off { background:rgba(148,163,184,.15); color:var(--suave); }
+  .pill.alerta { background:rgba(239,68,68,.15); color:var(--urg); }
+  canvas { width:100%; height:130px; display:block; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--borda); }
+  th { color:var(--suave); font-weight:600; }
+  tr.linha-alerta td { color:var(--urg); }
+  /* chat */
+  #chat { display:flex; flex-direction:column; height:calc(100vh - 150px); min-height:480px; }
+  #msgs { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:4px; }
+  .msg { max-width:88%; padding:10px 14px; border-radius:14px; white-space:pre-wrap; line-height:1.4; font-size:14px; }
+  .msg.user { align-self:flex-end; background:#1d4ed8; border-bottom-right-radius:4px; }
+  .msg.assistant { align-self:flex-start; background:#1f2b44; border-bottom-left-radius:4px; }
+  .msg .tag { display:block; font-size:11px; color:var(--aviso); font-weight:700; margin-bottom:4px; }
+  #status-ia { color:var(--suave); font-size:13px; min-height:18px; margin:6px 0; }
+  .linha-chat { display:flex; gap:8px; }
+  .linha-chat input { flex:1; }
+  #login { max-width:380px; margin:80px auto; }
+  #login .card { display:flex; flex-direction:column; gap:12px; }
+  #login h1 { margin:0 0 4px; }
+  .erro { color:var(--urg); font-size:14px; min-height:18px; }
+  .oculto { display:none !important; }
+  .aviso { max-width:1300px; margin:14px auto 0; padding:12px 16px; border:1px solid var(--aviso); color:var(--aviso);
+           background:rgba(245,158,11,.08); border-radius:12px; font-size:14px; }
+  .auto { color:var(--suave); font-size:13px; display:flex; align-items:center; gap:6px; margin-top:8px; }
+  @media (max-width: 700px) { #chat { height:auto; min-height:420px; } .stats { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<div class="container">
 
-  <!-- Header -->
+<!-- Tela de login (mesma conta do app Clyvo Vet) -->
+<section id="login">
+  <div class="card">
+    <h1>🐾 PetSense</h1>
+    <small style="color:var(--suave)">Entre com a mesma conta do app Clyvo Vet</small>
+    <input type="email" id="email" placeholder="E-mail">
+    <input type="password" id="senha" placeholder="Senha">
+    <button id="btn-entrar">Entrar</button>
+    <div class="erro" id="erro-login"></div>
+  </div>
+</section>
+
+<!-- Painel -->
+<section id="painel" class="oculto">
   <header>
-    <div class="logo-area">
-      <div class="logo-icon">🐾</div>
-      <div class="logo-text">
-        <h1>PetSense Dashboard</h1>
-        <span>CLYVO VET · IoT Monitor</span>
-      </div>
+    <div>
+      <h1>🐾 PetSense · Clyvo Vet</h1>
+      <small>Monitoramento IoT em tempo real + assistente de IA</small>
     </div>
-    <div class="status-pill">
-      <div class="dot" id="statusDot"></div>
-      <span id="statusLabel">DISPOSITIVO CONECTADO</span>
+    <div class="barra">
+      <span class="pill off" id="pill-rt">tempo real: desconectado</span>
+      <select id="sel-pet"></select>
+      <button class="sec" id="btn-sair">Sair</button>
     </div>
   </header>
 
-  <!-- Pet Selector -->
-  <div class="pet-bar">
-    <div class="pet-card active" onclick="selectPet(this, 'Thor')">
-      <div class="pet-avatar">🐕</div>
-      <div class="pet-info">
-        <div class="name">Thor</div>
-        <div class="breed">Golden · 3 anos</div>
+  <div class="aviso oculto" id="aviso" style="margin-left:24px;margin-right:24px"></div>
+  <main>
+    <div>
+      <div class="stats">
+        <div class="stat" id="st-temp"><div class="rot">Temperatura</div><div class="val" id="v-temp">--</div></div>
+        <div class="stat" id="st-bpm"><div class="rot">Frequência cardíaca</div><div class="val" id="v-bpm">--</div></div>
+        <div class="stat"><div class="rot">Coleira</div><div class="val" style="font-size:20px;margin-top:10px"><span class="pill off" id="pill-coleira">sem sinal</span></div>
+          <div class="rot" id="v-hora" style="margin-top:6px">--</div></div>
       </div>
-    </div>
-    <div class="pet-card" onclick="selectPet(this, 'Luna')">
-      <div class="pet-avatar">🐈</div>
-      <div class="pet-info">
-        <div class="name">Luna</div>
-        <div class="breed">Persa · 2 anos</div>
-      </div>
-    </div>
-    <div class="pet-card" onclick="selectPet(this, 'Rex')">
-      <div class="pet-avatar">🐕</div>
-      <div class="pet-info">
-        <div class="name">Rex</div>
-        <div class="breed">Bulldog · 5 anos</div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Métricas -->
-  <div class="metrics-grid">
-    <div class="metric-card temp" id="cardTemp">
-      <div class="metric-label">🌡️ Temperatura Corporal</div>
-      <div class="metric-value" id="tempVal">--.-<span class="metric-unit"> °C</span></div>
-      <div class="metric-sub" id="tempSub">Aguardando leitura...</div>
-      <div class="range-bar">
-        <div class="range-fill" id="tempBar" style="width:0%; background: var(--warn);"></div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>Temperatura (°C) · faixa normal em destaque</h2>
+        <canvas id="graf-temp" width="700" height="130"></canvas>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>Frequência cardíaca (bpm) · faixa normal em destaque</h2>
+        <canvas id="graf-bpm" width="700" height="130"></canvas>
+      </div>
+      <div class="card">
+        <h2>Últimas leituras</h2>
+        <table>
+          <thead><tr><th>Hora</th><th>Temp.</th><th>BPM</th><th>Status</th></tr></thead>
+          <tbody id="tabela"></tbody>
+        </table>
       </div>
     </div>
 
-    <div class="metric-card bpm" id="cardBpm">
-      <div class="metric-label">❤️ Frequência Cardíaca</div>
-      <div class="metric-value" id="bpmVal">---<span class="metric-unit"> bpm</span></div>
-      <div class="metric-sub" id="bpmSub">Aguardando leitura...</div>
-      <div class="range-bar">
-        <div class="range-fill" id="bpmBar" style="width:0%; background: var(--danger);"></div>
+    <div class="card" id="chat">
+      <h2>Assistente de IA · Clyvo Vet</h2>
+      <div id="msgs"></div>
+      <div id="status-ia"></div>
+      <div class="linha-chat">
+        <input type="text" id="txt-msg" placeholder="Pergunte sobre a saúde do pet..." maxlength="500">
+        <button id="btn-enviar">Enviar</button>
       </div>
+      <button class="sec" id="btn-analisar" style="margin-top:8px">Analisar agora</button>
+      <label class="auto"><input type="checkbox" id="chk-auto" checked> Alerta proativo automático (a IA avisa sozinha quando uma leitura entra em alerta)</label>
     </div>
-
-    <div class="metric-card status" id="cardStatus">
-      <div class="metric-label">✅ Status Geral</div>
-      <div class="metric-value" id="statusVal" style="font-size:1.4rem; margin-top:8px;">Normal</div>
-      <div class="metric-sub ok" id="statusSub">Todos os sinais dentro do esperado</div>
-    </div>
-
-    <div class="metric-card alerts">
-      <div class="metric-label">⚠️ Alertas (24h)</div>
-      <div class="metric-value" id="alertCount">0<span class="metric-unit"> eventos</span></div>
-      <div class="metric-sub" id="lastAlert">Nenhum alerta recente</div>
-    </div>
-  </div>
-
-  <!-- Gráfico + Log -->
-  <div class="bottom-grid">
-    <div class="chart-card">
-      <div class="card-header">
-        <div class="card-title"><span class="icon">📈</span> Histórico em Tempo Real</div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div> Temp</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> BPM</div>
-        </div>
-      </div>
-      <canvas id="chartCanvas"></canvas>
-    </div>
-
-    <div class="log-card">
-      <div class="card-header">
-        <div class="card-title"><span class="icon">📋</span> Log de Eventos</div>
-      </div>
-      <div class="log-list" id="logList">
-        <div class="log-item ok">
-          <span class="log-icon">✅</span>
-          <div class="log-text">
-            <div class="time">Sistema iniciado</div>
-            <div>PetSense monitorando Thor</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <div class="footer-bar">
-    <span>FIAP 2026 · Challenge CLYVO VET</span>
-    <span id="updateTime">Última atualização: --:--:--</span>
-  </div>
-
-</div>
+  </main>
+</section>
 
 <script>
-// ===================== DADOS E SIMULAÇÃO =====================
-const TEMP_MIN = 37.5, TEMP_MAX = 39.5;
-const BPM_MIN = 60, BPM_MAX = 140;
+// ===== CONFIGURAÇÃO (Settings > API do Supabase). A chave é pública; a segurança vem da RLS. =====
+const SUPABASE_URL = 'https://dybsrpiiibzigekcpxff.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_CV0LVXgcWA7KAkm1bMKpRg_ZGbGEi_z';
+// ==================================================================================================
 
-let alertCount = 0;
-let currentPet = 'Thor';
-const history = { temp: [], bpm: [], labels: [] };
-const MAX_POINTS = 20;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = (id) => document.getElementById(id);
 
-// Simula leituras do ESP32 (substitua por fetch() real quando tiver servidor)
-function simularLeitura() {
-  // Temperatura realista de cachorro: 37.5–39.5°C
-  // Às vezes gera valores fora do range para testar alertas
-  const anomaly = Math.random() < 0.15; // 15% de chance de anomalia
-  const temp = anomaly
-    ? +(39.5 + Math.random() * 1.5).toFixed(1)
-    : +(37.5 + Math.random() * 2).toFixed(1);
+let pets = [], pet = null, leituras = [], vistas = new Set();
+let canalLeituras = null, canalMsgs = null, ultimoDisparo = 0;
+let ocupadoIA = false;
 
-  const bpm = anomaly
-    ? Math.floor(140 + Math.random() * 30)
-    : Math.floor(70 + Math.random() * 60);
-
-  return { temperatura: temp, bpm, alerta: anomaly };
+function aviso(texto) {
+  const el = $('aviso');
+  if (!texto) { el.classList.add('oculto'); return; }
+  el.textContent = texto; el.classList.remove('oculto');
 }
 
-// Atualiza UI com novos dados
-function atualizarDashboard(data) {
-  const { temperatura, bpm, alerta } = data;
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('pt-BR');
+function statusRT(status) {
+  const pill = $('pill-rt');
+  const ok = status === 'SUBSCRIBED';
+  pill.className = 'pill ' + (ok ? 'ok' : 'off');
+  pill.textContent = 'tempo real: ' + (ok ? 'conectado' : (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' ? 'falhou' : 'conectando...'));
+}
 
-  // Temperatura
-  document.getElementById('tempVal').innerHTML =
-    `${temperatura.toFixed(1)}<span class="metric-unit"> °C</span>`;
-  const tempPct = Math.min(100, Math.max(0, ((temperatura - 36) / (41 - 36)) * 100));
-  document.getElementById('tempBar').style.width = tempPct + '%';
-  const tempOk = temperatura >= TEMP_MIN && temperatura <= TEMP_MAX;
-  document.getElementById('tempSub').textContent =
-    tempOk ? `✓ Normal (${TEMP_MIN}–${TEMP_MAX}°C)` : `⚠ Fora do normal! (${TEMP_MIN}–${TEMP_MAX}°C)`;
-  document.getElementById('tempSub').className = 'metric-sub ' + (tempOk ? 'ok' : 'danger');
-  document.getElementById('cardTemp').classList.toggle('alert', !tempOk);
+function limites(especie) {
+  return (especie || '').toLowerCase().includes('gat')
+    ? { tmin: 38.0, tmax: 39.5, bmin: 120, bmax: 220 }
+    : { tmin: 37.5, tmax: 39.5, bmin: 60, bmax: 140 };
+}
 
-  // BPM
-  document.getElementById('bpmVal').innerHTML =
-    `${bpm}<span class="metric-unit"> bpm</span>`;
-  const bpmPct = Math.min(100, Math.max(0, ((bpm - 40) / (180 - 40)) * 100));
-  document.getElementById('bpmBar').style.width = bpmPct + '%';
-  const bpmOk = bpm >= BPM_MIN && bpm <= BPM_MAX;
-  document.getElementById('bpmSub').textContent =
-    bpmOk ? `✓ Normal (${BPM_MIN}–${BPM_MAX} bpm)` : `⚠ Fora do normal!`;
-  document.getElementById('bpmSub').className = 'metric-sub ' + (bpmOk ? 'ok' : 'danger');
-  document.getElementById('cardBpm').classList.toggle('alert', !bpmOk);
+// Converte e valida uma leitura vinda do banco (descarta valores inválidos)
+function normalizar(l) {
+  const temperatura = Number(l.temperatura), bpm = Number(l.bpm);
+  if (!Number.isFinite(temperatura) || !Number.isFinite(bpm)) return null;
+  return { ...l, temperatura, bpm };
+}
 
-  // Status geral
-  const statusEl = document.getElementById('statusVal');
-  const statusSub = document.getElementById('statusSub');
-  if (alerta) {
-    statusEl.textContent = '⚠ ALERTA';
-    statusEl.style.color = 'var(--danger)';
-    statusSub.textContent = 'Verificar sinais do pet imediatamente';
-    statusSub.className = 'metric-sub danger';
-    document.getElementById('statusDot').style.background = 'var(--danger)';
-    document.getElementById('statusDot').style.boxShadow = '0 0 8px var(--danger)';
-  } else {
-    statusEl.textContent = 'Normal';
-    statusEl.style.color = 'var(--ok)';
-    statusSub.textContent = 'Todos os sinais dentro do esperado';
-    statusSub.className = 'metric-sub ok';
-    document.getElementById('statusDot').style.background = 'var(--ok)';
-    document.getElementById('statusDot').style.boxShadow = '0 0 8px var(--ok)';
+// ---------- Autenticação ----------
+function erroLogin(e) {
+  const m = (e.message || '').toLowerCase();
+  if (m.includes('invalid login')) return 'E-mail ou senha inválidos.';
+  if (m.includes('not confirmed')) return 'E-mail ainda não confirmado.';
+  return 'Erro: ' + e.message;
+}
+
+$('btn-entrar').onclick = async () => {
+  const email = $('email').value.trim(), senha = $('senha').value;
+  $('erro-login').textContent = '';
+  if (!email || !senha) { $('erro-login').textContent = 'Informe e-mail e senha.'; return; }
+  $('btn-entrar').disabled = true; $('btn-entrar').textContent = 'Entrando...';
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+    if (error) { console.error('login:', error); $('erro-login').textContent = erroLogin(error); return; }
+    await iniciar();
+  } catch (e) {
+    console.error(e);
+    $('erro-login').textContent = 'Falha de conexão com o Supabase. Verifique a internet e a URL.';
+  } finally {
+    $('btn-entrar').disabled = false; $('btn-entrar').textContent = 'Entrar';
+  }
+};
+$('senha').onkeydown = (e) => { if (e.key === 'Enter') $('btn-entrar').click(); };
+$('btn-sair').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+async function iniciar() {
+  $('login').classList.add('oculto');
+  $('painel').classList.remove('oculto');
+  const { data, error } = await sb.from('pets').select('*').order('created_at');
+  if (error) { console.error('pets:', error); aviso('Não foi possível carregar os pets: ' + error.message); return; }
+  pets = data || [];
+  if (pets.length === 0) { aviso('Nenhum pet cadastrado nesta conta. Cadastre um no app Clyvo Vet.'); return; }
+  aviso('');
+  const sel = $('sel-pet');
+  sel.replaceChildren(...pets.map((p) => {
+    const o = document.createElement('option'); o.value = String(p.id); o.textContent = p.nome; return o;
+  }));
+  sel.onchange = () => trocarPet(sel.value);
+  await trocarPet(String(pets[0].id));
+}
+
+sb.auth.getSession().then(({ data, error }) => {
+  if (error) console.error('sessão:', error);
+  if (data && data.session) iniciar().catch(console.error);
+});
+
+// ---------- Pet selecionado ----------
+async function trocarPet(id) {
+  pet = pets.find((p) => String(p.id) === String(id));
+  if (!pet) { aviso('Pet não encontrado.'); return; }
+  if (canalLeituras) sb.removeChannel(canalLeituras);
+  if (canalMsgs) sb.removeChannel(canalMsgs);
+  $('msgs').replaceChildren(); vistas = new Set();
+
+  const { data, error } = await sb.from('leituras_iot').select('*').eq('pet_id', pet.id)
+    .order('created_at', { ascending: false }).limit(30);
+  if (error) { console.error('leituras:', error); aviso('Falha ao carregar leituras: ' + error.message); }
+  leituras = (data || []).map(normalizar).filter(Boolean);
+  desenhar();
+  await carregarMensagens();
+
+  canalLeituras = sb.channel('leituras-' + pet.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leituras_iot', filter: `pet_id=eq.${pet.id}` },
+      (p) => novaLeitura(p.new)).subscribe(statusRT);
+  canalMsgs = sb.channel('msgs-' + pet.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens_ia', filter: `pet_id=eq.${pet.id}` },
+      (p) => mostrarMensagem(p.new)).subscribe();
+}
+
+function novaLeitura(bruta) {
+  const l = normalizar(bruta);
+  if (!l) return;                       // ignora leitura incompleta
+  leituras = [l, ...leituras].slice(0, 30);
+  desenhar();
+  // Alerta proativo: a IA avisa sozinha (no máx. 1x por minuto; o servidor também limita)
+  if (l.alerta && $('chk-auto').checked && Date.now() - ultimoDisparo > 60000) {
+    ultimoDisparo = Date.now();
+    analisar(false);
+  }
+}
+
+// ---------- Desenho do painel ----------
+function desenhar() {
+  const lim = limites(pet && pet.especie);
+  const ult = leituras[0];
+  $('v-temp').textContent = ult ? ult.temperatura.toFixed(1) + ' °C' : '--';
+  $('v-bpm').textContent = ult ? Math.round(ult.bpm) + ' bpm' : '--';
+  $('st-temp').classList.toggle('alerta', !!ult && (ult.temperatura < lim.tmin || ult.temperatura > lim.tmax));
+  $('st-bpm').classList.toggle('alerta', !!ult && (ult.bpm < lim.bmin || ult.bpm > lim.bmax));
+
+  const pill = $('pill-coleira');
+  if (!ult) { pill.className = 'pill off'; pill.textContent = 'sem leituras'; $('v-hora').textContent = '--'; }
+  else {
+    const seg = (Date.now() - new Date(ult.created_at).getTime()) / 1000;
+    pill.className = 'pill ' + (ult.alerta ? 'alerta' : seg < 30 ? 'ok' : 'off');
+    pill.textContent = ult.alerta ? 'ALERTA' : seg < 30 ? 'online' : 'última leitura antiga';
+    $('v-hora').textContent = new Date(ult.created_at).toLocaleTimeString('pt-BR');
   }
 
-  // Contador de alertas
-  if (alerta) {
-    alertCount++;
-    document.getElementById('alertCount').innerHTML =
-      `${alertCount}<span class="metric-unit"> eventos</span>`;
-    document.getElementById('lastAlert').textContent = `Último: ${timeStr}`;
+  $('tabela').replaceChildren(...leituras.slice(0, 10).map((l) => {
+    const tr = document.createElement('tr');
+    if (l.alerta) tr.className = 'linha-alerta';
+    [new Date(l.created_at).toLocaleTimeString('pt-BR'), l.temperatura.toFixed(1) + ' °C', String(Math.round(l.bpm)), l.alerta ? 'Alerta' : 'Normal']
+      .forEach((txt) => { const td = document.createElement('td'); td.textContent = txt; tr.appendChild(td); });
+    return tr;
+  }));
+
+  const ordem = [...leituras].reverse();
+  grafico($('graf-temp'), ordem.map((l) => l.temperatura), lim.tmin, lim.tmax, '#e63963');
+  grafico($('graf-bpm'), ordem.map((l) => l.bpm), lim.bmin, lim.bmax, '#3b82f6');
+}
+
+function grafico(canvas, valores, faixaMin, faixaMax, cor) {
+  const c = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+  c.clearRect(0, 0, w, h);
+  if (valores.length < 2) { c.fillStyle = '#9aa8bd'; c.font = '14px sans-serif'; c.fillText('Aguardando leituras...', 12, 24); return; }
+  const min = Math.min(...valores, faixaMin) - (faixaMax - faixaMin) * 0.15;
+  const max = Math.max(...valores, faixaMax) + (faixaMax - faixaMin) * 0.15;
+  const y = (v) => h - ((v - min) / (max - min)) * (h - 16) - 8;
+  c.fillStyle = 'rgba(34,197,94,.12)';
+  c.fillRect(0, y(faixaMax), w, y(faixaMin) - y(faixaMax));
+  c.strokeStyle = cor; c.lineWidth = 2; c.beginPath();
+  valores.forEach((v, i) => { const x = (i / (valores.length - 1)) * (w - 16) + 8; i ? c.lineTo(x, y(v)) : c.moveTo(x, y(v)); });
+  c.stroke();
+  const ultimo = valores[valores.length - 1];
+  c.fillStyle = cor; c.beginPath(); c.arc(w - 8, y(ultimo), 4, 0, Math.PI * 2); c.fill();
+}
+setInterval(() => { if (pet) desenhar(); }, 10000);
+
+// ---------- IA ----------
+function mostrarMensagem(m) {
+  if (!m || vistas.has(m.id)) return;
+  vistas.add(m.id);
+  const div = document.createElement('div');
+  div.className = 'msg ' + (m.papel === 'user' ? 'user' : 'assistant');
+  if (m.papel !== 'user' && m.origem === 'regra') {
+    const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = '⚠ ALERTA PROATIVO'; div.appendChild(tag);
   }
+  div.appendChild(document.createTextNode(m.conteudo));   // texto puro: seguro contra HTML injetado
+  $('msgs').appendChild(div);
+  $('msgs').scrollTop = $('msgs').scrollHeight;
+}
 
-  // Histórico para o gráfico
-  history.temp.push(temperatura);
-  history.bpm.push(bpm);
-  history.labels.push(timeStr.slice(-5)); // HH:MM
-  if (history.temp.length > MAX_POINTS) {
-    history.temp.shift(); history.bpm.shift(); history.labels.shift();
+async function carregarMensagens() {
+  if (!pet) return;
+  const { data, error } = await sb.from('mensagens_ia').select('*').eq('pet_id', pet.id)
+    .order('created_at', { ascending: true }).limit(50);
+  if (error) { console.error('mensagens:', error); aviso('Falha ao carregar o histórico da IA: ' + error.message); return; }
+  (data || []).forEach(mostrarMensagem);
+}
+
+async function invocarIA(corpo) {
+  const { data, error } = await sb.functions.invoke('clyvo-ia', { body: corpo });
+  if (error) throw error;
+  return data;
+}
+
+async function analisar(forcar) {
+  if (!pet || ocupadoIA) return;
+  ocupadoIA = true; $('btn-analisar').disabled = true;
+  $('status-ia').textContent = 'IA analisando os dados do pet...';
+  try {
+    const r = await invocarIA({ modo: 'alerta', pet_id: pet.id, forcar });
+    if (!r || typeof r.gerou !== 'boolean') throw new Error('resposta inesperada da função');
+    $('status-ia').textContent = r.gerou
+      ? (r.fonte === 'regras' ? 'Mensagem gerada pelo motor de regras (LLM indisponível).' : '')
+      : (r.motivo === 'cooldown' ? 'Alerta recente já enviado.' : 'Nenhum alerta relevante no momento.');
+    await carregarMensagens();
+  } catch (e) {
+    console.error('analisar:', e);
+    $('status-ia').textContent = 'Erro ao consultar a IA (veja o Console para detalhes).';
+  } finally {
+    ocupadoIA = false; $('btn-analisar').disabled = false;
   }
-
-  // Adiciona ao log
-  adicionarLog(alerta, temperatura, bpm, timeStr);
-
-  // Atualiza timestamp
-  document.getElementById('updateTime').textContent = `Última atualização: ${timeStr}`;
-
-  // Redesenha gráfico
-  desenharGrafico();
 }
 
-// Log de eventos
-function adicionarLog(alerta, temp, bpm, time) {
-  const list = document.getElementById('logList');
-  const item = document.createElement('div');
-  item.className = `log-item ${alerta ? 'danger' : 'ok'}`;
-  item.innerHTML = `
-    <span class="log-icon">${alerta ? '⚠️' : '✅'}</span>
-    <div class="log-text">
-      <div class="time">${time}</div>
-      <div>${alerta ? 'ALERTA' : 'Normal'} — Temp: ${temp}°C | BPM: ${bpm}</div>
-    </div>
-  `;
-  list.insertBefore(item, list.firstChild);
-  if (list.children.length > 8) list.removeChild(list.lastChild);
-}
-
-// Gráfico simples com Canvas
-function desenharGrafico() {
-  const canvas = document.getElementById('chartCanvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  const W = canvas.offsetWidth, H = canvas.offsetHeight;
-  const pad = { top: 10, right: 10, bottom: 30, left: 40 };
-  const iW = W - pad.left - pad.right;
-  const iH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(26,51,84,0.8)';
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.top + (iH / 4) * i;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+async function enviarPergunta() {
+  const texto = $('txt-msg').value.trim();
+  if (!texto || !pet || ocupadoIA) return;
+  ocupadoIA = true; $('btn-enviar').disabled = true;
+  $('txt-msg').value = '';
+  $('status-ia').textContent = 'Assistente digitando...';
+  try {
+    await invocarIA({ modo: 'chat', pet_id: pet.id, mensagem: texto });
+    $('status-ia').textContent = '';
+    await carregarMensagens();
+  } catch (e) {
+    console.error('chat:', e);
+    $('txt-msg').value = texto;            // não perde o que o usuário digitou
+    $('status-ia').textContent = 'Erro ao consultar a IA. Sua mensagem foi mantida; tente novamente.';
+  } finally {
+    ocupadoIA = false; $('btn-enviar').disabled = false;
   }
-
-  if (history.temp.length < 2) return;
-
-  const n = history.temp.length;
-
-  // Temperatura (laranja)
-  const tMin = 36, tMax = 41;
-  ctx.strokeStyle = 'var(--warn)';
-  ctx.lineWidth = 2;
-  ctx.shadowBlur = 6;
-  ctx.shadowColor = 'var(--warn)';
-  ctx.beginPath();
-  history.temp.forEach((v, i) => {
-    const x = pad.left + (i / (n - 1)) * iW;
-    const y = pad.top + iH - ((v - tMin) / (tMax - tMin)) * iH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // BPM (vermelho) — normalizado na mesma escala visual
-  const bMin = 40, bMax = 180;
-  ctx.strokeStyle = '#ff2d55';
-  ctx.lineWidth = 2;
-  ctx.shadowBlur = 6;
-  ctx.shadowColor = '#ff2d55';
-  ctx.beginPath();
-  history.bpm.forEach((v, i) => {
-    const x = pad.left + (i / (n - 1)) * iW;
-    const y = pad.top + iH - ((v - bMin) / (bMax - bMin)) * iH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Labels do eixo X
-  ctx.fillStyle = 'rgba(90,122,153,0.8)';
-  ctx.font = '10px Space Mono, monospace';
-  ctx.textAlign = 'center';
-  [0, Math.floor(n/2), n-1].forEach(i => {
-    if (history.labels[i]) {
-      const x = pad.left + (i / (n - 1)) * iW;
-      ctx.fillText(history.labels[i], x, H - 4);
-    }
-  });
 }
 
-// Troca de pet
-function selectPet(el, name) {
-  document.querySelectorAll('.pet-card').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  currentPet = name;
-  // Limpa histórico ao trocar de pet
-  history.temp = []; history.bpm = []; history.labels = [];
-  alertCount = 0;
-  adicionarLog(false, '--', '--', new Date().toLocaleTimeString('pt-BR'));
-}
-
-// Loop principal: a cada 2s simula nova leitura
-// Em produção, troque simularLeitura() por fetch('/data')
-setInterval(() => {
-  const data = simularLeitura();
-  atualizarDashboard(data);
-}, 2000);
-
-// Primeira leitura imediata
-atualizarDashboard(simularLeitura());
-window.addEventListener('resize', desenharGrafico);
+$('btn-enviar').onclick = enviarPergunta;
+$('txt-msg').onkeydown = (e) => { if (e.key === 'Enter') enviarPergunta(); };
+$('btn-analisar').onclick = () => analisar(true);
 </script>
 </body>
 </html>
